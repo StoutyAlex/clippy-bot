@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core'
 import * as lambda from '@aws-cdk/aws-lambda'
 import * as apigateway from '@aws-cdk/aws-apigateway'
+import * as dynamodb from '@aws-cdk/aws-dynamodb'
 import { getApiGateway } from './api-gateway';
 import { buildName } from './build-name';
 import { FunctionProps } from '@aws-cdk/aws-lambda';
@@ -19,10 +20,21 @@ export class ClippyStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: ClippyApiStackProps) {
     super(scope, id, props)
 
-    const getLambdaProps = (name: string): Omit<FunctionProps, 'handler'> => ({
+    const table = new dynamodb.Table(this, 'partnersInformationTable', {
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      tableName: buildName('clippy-media-table', props.stage),
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    })
+
+    const getLambdaProps = (name: string, environment = {}): Omit<FunctionProps, 'handler'> => ({
       functionName: buildName(name, props.stage),
       runtime: lambda.Runtime.NODEJS_14_X,    // execution environment
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'src', 'lambdas')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist')),
+      environment: {
+        ...environment,
+        TABLE_NAME: table.tableName
+      }
     })
 
     const addMedia = new lambda.Function(this, 'ClippyAddMedia', {
@@ -49,6 +61,12 @@ export class ClippyStack extends cdk.Stack {
       ...getLambdaProps('get-media-item'),
       handler: 'get-media-item.handler',
     })
+
+    table.grantReadData(getMedia)
+    table.grantReadData(getMediaItem)
+    table.grantReadWriteData(deleteMedia)
+    table.grantReadWriteData(addMedia)
+    table.grantReadWriteData(updateMedia)
 
     const api = getApiGateway(this, props);
 
