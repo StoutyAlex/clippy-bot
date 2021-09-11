@@ -2,9 +2,13 @@ import * as cdk from '@aws-cdk/core'
 import * as lambda from '@aws-cdk/aws-lambda'
 import * as apigateway from '@aws-cdk/aws-apigateway'
 import * as dynamodb from '@aws-cdk/aws-dynamodb'
+import * as targets from '@aws-cdk/aws-events-targets';
+import * as events from '@aws-cdk/aws-events';
+
 import { getApiGateway } from './api-gateway';
 import { buildName } from './build-name';
 import { FunctionProps } from '@aws-cdk/aws-lambda';
+import { LambdaFunction as LambdaFunctionTarget } from '@aws-cdk/aws-events-targets'
 
 const path = require('path');
 
@@ -20,12 +24,21 @@ export class ClippyStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: ClippyApiStackProps) {
     super(scope, id, props)
 
-    const table = new dynamodb.Table(this, 'partnersInformationTable', {
+    const mediaTable = new dynamodb.Table(this, 'ClippyMediaTable', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      tableName: buildName('clippy-media-table', props.stage),
+      tableName: buildName('media-table', props.stage),
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     })
+
+    const guildTable = new dynamodb.Table(this, 'ClippyGuildTable', {
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      tableName: buildName('guild-table', props.stage),
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    })
+    
+    const bus = new events.EventBus(this, buildName('ClippyEventBus', props.stage))
 
     const getLambdaProps = (name: string, environment = {}): Omit<FunctionProps, 'handler'> => ({
       functionName: buildName(name, props.stage),
@@ -33,9 +46,14 @@ export class ClippyStack extends cdk.Stack {
       code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist')),
       environment: {
         ...environment,
-        TABLE_NAME: table.tableName
+        MEDIA_TABLE_NAME: mediaTable.tableName,
+        GUILD_TABLE_NAME: guildTable.tableName,
+        EVENT_BUS_NAME: bus.eventBusName,
       }
     })
+
+
+    //new cdk.CfnOutput(this, buildName('ClippyEventBus', props.stage), {value: bus.eventBusName})
 
     const addMedia = new lambda.Function(this, 'ClippyAddMedia', {
       ...getLambdaProps('add-media'),
@@ -62,17 +80,34 @@ export class ClippyStack extends cdk.Stack {
       handler: 'get-media-item.handler',
     })
 
-    table.grantReadData(getMedia)
-    table.grantReadData(getMediaItem)
-    table.grantReadWriteData(deleteMedia)
-    table.grantReadWriteData(addMedia)
-    table.grantReadWriteData(updateMedia)
+    const guildHandler = new lambda.Function(this, 'ClippyGuildHandler', {
+      ...getLambdaProps('guild-handler'),
+      handler: 'guild-handler.handler',
+    })
+
+    new events.Rule(this, buildName('GuildEvents-rule', props.stage), {
+      enabled: true,
+      eventBus: bus,
+      eventPattern: {
+        source: ['Guilds'],
+        detailType: ['GuildDeleted']
+      },
+      targets: [
+        new LambdaFunctionTarget(deleteMedia)
+      ]
+    });
+
+    mediaTable.grantReadData(getMedia)
+    mediaTable.grantReadData(getMediaItem)
+    mediaTable.grantReadWriteData(deleteMedia)
+    mediaTable.grantReadWriteData(addMedia)
+    mediaTable.grantReadWriteData(updateMedia)
+    guildTable.grantReadWriteData(guildHandler)
+    bus.grantPutEventsTo(guildHandler)
 
     const api = getApiGateway(this, props);
 
     const versionedRoot = api.root.addResource('v1')
-    const mediaRoute = versionedRoot.addResource('media')
-    const mediaItem = mediaRoute.addResource('{id}')
 
     const addMediaIntegration = new apigateway.LambdaIntegration(addMedia, { requestTemplates })
     const updateMediaIntegration = new apigateway.LambdaIntegration(updateMedia, { requestTemplates })
@@ -80,13 +115,26 @@ export class ClippyStack extends cdk.Stack {
     const getMediaIntegration = new apigateway.LambdaIntegration(getMedia, { requestTemplates })
     const getMediaItemIntegration = new apigateway.LambdaIntegration(getMediaItem, { requestTemplates });
 
+    const guildHandlerIntegration = new apigateway.LambdaIntegration(guildHandler, { requestTemplates });
+
+
     // /v1/media
+    const mediaRoute = versionedRoot.addResource('media')
+
     mediaRoute.addMethod('POST', addMediaIntegration, { apiKeyRequired: true })
     mediaRoute.addMethod('PUT', updateMediaIntegration, { apiKeyRequired: true })
     mediaRoute.addMethod('DELETE', deleteMediaIntegration, { apiKeyRequired: true })
     mediaRoute.addMethod('GET', getMediaIntegration, { apiKeyRequired: true })
 
     // /v1/media/{item}
+    const mediaItem = mediaRoute.addResource('{id}')
+
     mediaItem.addMethod('GET', getMediaItemIntegration,  { apiKeyRequired: true })
+
+    // /v1/guild
+    const guildRoute = versionedRoot.addResource('guild')
+
+    guildRoute.addMethod('POST', guildHandlerIntegration, { apiKeyRequired: true })
+    guildRoute.addMethod('DELETE', guildHandlerIntegration, { apiKeyRequired: true })
   }
 }

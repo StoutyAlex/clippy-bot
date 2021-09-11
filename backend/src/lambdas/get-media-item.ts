@@ -1,7 +1,7 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { APIGatewayProxyEventV2 } from 'aws-lambda'
 
-const TABLE_NAME = process.env.TABLE_NAME!;
+const MEDIA_TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
 
 const handler = async (event: APIGatewayProxyEventV2 ) => {
     if (!event.pathParameters?.id) {
@@ -13,7 +13,7 @@ const handler = async (event: APIGatewayProxyEventV2 ) => {
     const dynamoClient = new DocumentClient();
 
     const params: DocumentClient.GetItemInput = {
-        TableName: TABLE_NAME,
+        TableName: MEDIA_TABLE_NAME,
         Key: {
             id: event.pathParameters.id
         }

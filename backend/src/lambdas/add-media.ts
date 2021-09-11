@@ -1,7 +1,7 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
 import { v4 as uuidv4 } from 'uuid'
 
-const TABLE_NAME = process.env.TABLE_NAME!;
+const MEDIA_TABLE_NAME = process.env.MEDIA_TABLE_NAME!;
 
 const handler = async () => {
     const dynamoClient = new DocumentClient()
@@ -13,7 +13,7 @@ const handler = async () => {
 
     try {
         await dynamoClient.put({
-            TableName: TABLE_NAME,
+            TableName: MEDIA_TABLE_NAME,
             Item: mediaItem
         }).promise()
     } catch (error) {
