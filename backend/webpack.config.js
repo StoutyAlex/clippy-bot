@@ -3,7 +3,7 @@ const path = require('path')
 
 module.exports = {
   target: 'node14',
-  entry: Object.fromEntries(glob.sync('./src/lambdas/**.ts').map((item) => [path.basename(item, '.ts'), item])),
+  entry: Object.fromEntries(glob.sync('./src/lambdas/**.ts').map((item) => [`${path.basename(item, '.ts')}/handler`, item])),
   devtool: 'inline-source-map',
   output: {
     filename: '[name].js',

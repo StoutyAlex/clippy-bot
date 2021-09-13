@@ -40,10 +40,9 @@ export class ClippyStack extends cdk.Stack {
     
     const bus = new events.EventBus(this, buildName('ClippyEventBus', props.stage))
 
-    const getLambdaProps = (name: string, environment = {}): Omit<FunctionProps, 'handler'> => ({
+    const getLambdaProps = (name: string, environment = {}): Omit<FunctionProps, 'handler' | 'code'> => ({
       functionName: buildName(name, props.stage),
       runtime: lambda.Runtime.NODEJS_14_X,    // execution environment
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist')),
       environment: {
         ...environment,
         MEDIA_TABLE_NAME: mediaTable.tableName,
@@ -57,32 +56,38 @@ export class ClippyStack extends cdk.Stack {
 
     const addMedia = new lambda.Function(this, 'ClippyAddMedia', {
       ...getLambdaProps('add-media'),
-      handler: 'add-media.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'add-media')),
+      handler: 'handler.handler',
     })
 
     const deleteMedia = new lambda.Function(this, 'ClippyDeleteMedia', {
       ...getLambdaProps('delete-media'),
-      handler: 'delete-media.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'delete-media')),
+      handler: 'handler.handler',
     })
 
     const updateMedia = new lambda.Function(this, 'ClippyUpdateMedia', {
       ...getLambdaProps('update-media'),
-      handler: 'update-media.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'update-media')),
+      handler: 'handler.handler',
     })
 
     const getMedia = new lambda.Function(this, 'ClippyGetMedia', {
       ...getLambdaProps('get-media'),
-      handler: 'get-media.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'get-media')),
+      handler: 'handler.handler',
     })
 
     const getMediaItem = new lambda.Function(this, 'ClippyGetMediaItem', {
       ...getLambdaProps('get-media-item'),
-      handler: 'get-media-item.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'get-media-item')),
+      handler: 'handler.handler',
     })
 
     const guildHandler = new lambda.Function(this, 'ClippyGuildHandler', {
       ...getLambdaProps('guild-handler'),
-      handler: 'guild-handler.handler',
+      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'guild-handler')),
+      handler: 'handler.handler',
     })
 
     new events.Rule(this, buildName('GuildEvents-rule', props.stage), {
