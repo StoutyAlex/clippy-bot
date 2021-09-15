@@ -1,0 +1,44 @@
+{
+  "name": "sheev-bot-v2",
+  "version": "2.0.0",
+  "description": "Sheev Bot",
+  "main": "dist/main.js",
+  "scripts": {
+    "test": "jest",
+    "dev": "nodemon",
+    "dev:debug": "nodemon --config nodemon.json --signal SIGHUP --inspect-brk src/main.ts",
+    "compile": "tsc --project ./tsconfig.json",
+    "compile:start": "tsc --project ./tsconfig.json && npm run start",
+    "start": "node ./dist/main.js"
+  },
+  "keywords": [
+    "sheev",
+    "bot",
+    "discord",
+    "bot"
+  ],
+  "author": "StoutyAlex",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/lodash": "^4.14.172",
+    "@types/mongoose": "^5.7.32",
+    "@types/node": "^16.7.1",
+    "nodemon": "^2.0.12",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@discordjs/voice": "^0.6.0",
+    "discord.js": "^13.1.0",
+    "dotenv": "^10.0.0",
+    "lodash": "^4.17.21",
+    "mongoose": "^5.9.25",
+    "node-html-to-image": "^3.2.0",
+    "teemojs": "^1.8.0",
+    "twisted": "^1.46.0",
+    "winston": "^3.3.3",
+    "ytdl-core": "^4.9.1",
+    "ytpl": "^2.2.3",
+    "ytsr": "^3.5.3"
+  }
+}
