@@ -1,16 +1,12 @@
 import * as cdk from '@aws-cdk/core'
-import * as lambda from '@aws-cdk/aws-lambda'
 import * as apigateway from '@aws-cdk/aws-apigateway'
 import * as dynamodb from '@aws-cdk/aws-dynamodb'
-import * as targets from '@aws-cdk/aws-events-targets';
 import * as events from '@aws-cdk/aws-events';
 
 import { getApiGateway } from './api-gateway';
 import { buildName } from './build-name';
-import { FunctionProps } from '@aws-cdk/aws-lambda';
 import { LambdaFunction as LambdaFunctionTarget } from '@aws-cdk/aws-events-targets'
-
-const path = require('path');
+import { ClippyLambda } from './lambda';
 
 export interface ClippyApiStackProps extends cdk.StackProps {
   stage: 'prod' | 'dev' | 'test'
@@ -40,55 +36,18 @@ export class ClippyStack extends cdk.Stack {
     
     const bus = new events.EventBus(this, buildName('ClippyEventBus', props.stage))
 
-    const getLambdaProps = (name: string, environment = {}): Omit<FunctionProps, 'handler' | 'code'> => ({
-      functionName: buildName(name, props.stage),
-      runtime: lambda.Runtime.NODEJS_14_X,    // execution environment
-      environment: {
-        ...environment,
-        MEDIA_TABLE_NAME: mediaTable.tableName,
-        GUILD_TABLE_NAME: guildTable.tableName,
-        EVENT_BUS_NAME: bus.eventBusName,
-      }
-    })
+    const environment = {
+      MEDIA_TABLE_NAME: mediaTable.tableName,
+      GUILD_TABLE_NAME: guildTable.tableName,
+      EVENT_BUS_NAME: bus.eventBusName,
+    }
 
-
-    //new cdk.CfnOutput(this, buildName('ClippyEventBus', props.stage), {value: bus.eventBusName})
-
-    const addMedia = new lambda.Function(this, 'ClippyAddMedia', {
-      ...getLambdaProps('add-media'),
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'add-media')),
-      handler: 'handler.handler',
-    })
-
-    const deleteMedia = new lambda.Function(this, 'ClippyDeleteMedia', {
-      ...getLambdaProps('delete-media'),
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'delete-media')),
-      handler: 'handler.handler',
-    })
-
-    const updateMedia = new lambda.Function(this, 'ClippyUpdateMedia', {
-      ...getLambdaProps('update-media'),
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'update-media')),
-      handler: 'handler.handler',
-    })
-
-    const getMedia = new lambda.Function(this, 'ClippyGetMedia', {
-      ...getLambdaProps('get-media'),
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'get-media')),
-      handler: 'handler.handler',
-    })
-
-    const getMediaItem = new lambda.Function(this, 'ClippyGetMediaItem', {
-      ...getLambdaProps('get-media-item'),
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'get-media-item')),
-      handler: 'handler.handler',
-    })
-
-    const guildHandler = new lambda.Function(this, 'ClippyGuildHandler', {
-      ...getLambdaProps('guild-handler'),
-      code: lambda.Code.fromAsset(path.join(__dirname, '..', 'dist', 'guild-handler')),
-      handler: 'handler.handler',
-    })
+    const addMedia = new ClippyLambda(this, 'ClippyAddMedia', { name: 'add-media', environment })
+    const deleteMedia = new ClippyLambda(this, 'ClippyDeleteMedia', { name: 'delete-media', environment })
+    const updateMedia = new ClippyLambda(this, 'ClippyUpdateMedia', { name: 'update-media', environment })
+    const getMedia = new ClippyLambda(this, 'ClippyGetMedia', { name: 'get-media', environment })
+    const getMediaItem = new ClippyLambda(this, 'ClippyGetMediaItem', { name: 'get-media-item', environment })
+    const guildHandler = new ClippyLambda(this, 'ClippyGuildHandler', { name: 'guild-handler', environment })
 
     new events.Rule(this, buildName('GuildEvents-rule', props.stage), {
       enabled: true,
