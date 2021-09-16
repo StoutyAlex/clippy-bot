@@ -1,4 +1,4 @@
-import { Client, Guild, Intents, User as DiscordUser, GuildMember } from "discord.js";
+import { Client, Guild, Intents, Collection, Snowflake } from "discord.js";
 import { commands as sheevCommands } from "../commands";
 import * as config from '../config';
 import { events } from "../events";
@@ -7,7 +7,7 @@ import { Command } from "./command";
 
 class SheevBot extends Client {
     public readonly config = config;
-
+    public songQueue: Collection<Snowflake, []> = new Collection();
     public commands: Command[] = [];
 
     constructor() {
