@@ -17,6 +17,10 @@
     "discord",
     "bot"
   ],
+  "volta": {
+    "node": "16.9.1",
+    "npm": "7.21.1"
+  },
   "author": "StoutyAlex",
   "license": "ISC",
   "devDependencies": {
