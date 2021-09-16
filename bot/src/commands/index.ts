@@ -1,8 +1,11 @@
 import { Message } from "discord.js";
 import { Command } from "../base/command";
 import { SheevBot } from "../base/sheev-bot";
+import { StatusCommand } from "./status";
 
-export const commands: typeof Command[] = []
+export const commands: typeof Command[] = [
+    StatusCommand
+]
 
 const commandHandler = (client: SheevBot, message: Message) => {
     const args = message.content.substring(client.config.prefix.length).trim().split(/ +/);
