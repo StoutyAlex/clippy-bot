@@ -1,5 +1,6 @@
-import { ClientEvents, Client as DiscordClient } from "discord.js";
+import { ClientEvents, Client as DiscordClient, Guild as DiscordGuild } from "discord.js";
 import { SheevBot } from "../base/sheev-bot";
+import { SongQueue } from "../base/song-queue";
 
 export type EventName = keyof ClientEvents;
 
@@ -13,5 +14,11 @@ declare module "discord.js" {
     // @ts-expect-error Override
     export interface Client extends DiscordClient {
         readonly config: SheevBot["config"];
+        readonly queue: SheevBot["queue"];
+    }
+
+    // @ts-expect-error Override
+    export interface Guild extends DiscordGuild {
+        queue: SongQueue | null;
     }
 }

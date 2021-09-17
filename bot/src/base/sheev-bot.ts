@@ -4,10 +4,12 @@ import * as config from '../config';
 import { events } from "../events";
 import { Command } from "./command";
 
+// Extends DiscordJS Structures
+import "./Guild";
 
 class SheevBot extends Client {
     public readonly config = config;
-    public songQueue: Collection<Snowflake, []> = new Collection();
+    public queue: Collection<Snowflake, []> = new Collection();
     public commands: Command[] = [];
 
     constructor() {
