@@ -33,6 +33,15 @@ class SongQueue {
         return this._lastMusicMessageID;
     }
 
+    public set oldMusicMessage(id: Snowflake | null) {
+        if (this._lastMusicMessageID !== null) {
+            this.textChannel?.messages.fetch(this._lastMusicMessageID, { cache: false })
+                .then(m => m.delete())
+                .catch(e => console.error("DELETE_OLD_MUSIC_MESSAGE_ERR:", e));
+        }
+        this._lastMusicMessageID = id;
+    }
+
     public get oldVoiceStateUpdateMessage(): Snowflake | null {
         return this._lastVoiceStateUpdateMessageID;
     }

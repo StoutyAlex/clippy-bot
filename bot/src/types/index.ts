@@ -1,13 +1,16 @@
 import { ClientEvents, Client as DiscordClient, Guild as DiscordGuild } from "discord.js";
+import { Readable } from "stream";
 import { SheevBot } from "../base/sheev-bot";
 import { SongQueue } from "../base/song-queue";
 
 export type EventName = keyof ClientEvents;
 
 export interface Song {
-    name: string;
+    id: string;
+    title: string;
     url: string;
-    requestedBy: string;
+    thumbnail: string;
+    download(): Readable;
 }
 
 declare module "discord.js" {
