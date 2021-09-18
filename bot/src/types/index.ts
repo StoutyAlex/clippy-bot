@@ -1,4 +1,4 @@
-import { ClientEvents, Client as DiscordClient, Guild as DiscordGuild } from "discord.js";
+import { ClientEvents, Client as DiscordClient, Guild as DiscordGuild, Message } from "discord.js";
 import { Readable } from "stream";
 import { SheevBot } from "../base/sheev-bot";
 import { SongQueue } from "../base/song-queue";
@@ -11,6 +11,10 @@ export interface Song {
     url: string;
     thumbnail: string;
     download(): Readable;
+}
+
+export interface ICommand {
+    run(message: Message, args: string[]): any;
 }
 
 declare module "discord.js" {

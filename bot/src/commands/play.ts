@@ -3,6 +3,8 @@ import { Guild, Message, StageChannel, TextBasedChannels, TextChannel, VoiceChan
 import { Command, CommandMeta } from "../base/command";
 import { SheevBot } from "../base/sheev-bot";
 import { SongQueue } from "../base/song-queue";
+import { isSameVoiceChannel } from "../checks/same-voice-channel";
+import { isUserInVoiceChannel } from "../checks/user-in-voice";
 import { Song } from "../types";
 import { createEmbed } from "../utils/create-embed";
 import { Video, YouTube } from "../youtube";
@@ -28,7 +30,11 @@ class Play extends Command {
         super(client, meta);
     }
 
-    async run(message: Message, ...args: string[]) {
+    // TODO: Check user is in voice channel
+    // TODO: same voice channel 
+    @isUserInVoiceChannel()
+    @isSameVoiceChannel()
+    async run(message: Message, args: string[]) {
         const voiceChannel = message.member!.voice.channel!;
         if (!args[0]) {
             return message.channel.send({
@@ -80,10 +86,15 @@ class Play extends Command {
             url: video.url
         };
 
-        if (!message.guild!.queue) {
-            message.guild!.queue = new SongQueue(message.channel as TextChannel, voiceChannel);
-        }
+        if (message.guild!.queue) {
+            message.guild!.queue!.songs.addSong(song);
 
+            return message.channel.send({
+                embeds: [createEmbed("info", `✅ Track **[${song.title}](${song.url})** has been added to the queue`).setThumbnail(song.thumbnail)]
+            }).catch(e => console.error("PLAY_CMD_ERR:", e));
+        }
+        
+        message.guild!.queue = new SongQueue(message.channel as TextChannel, voiceChannel);
         message.guild!.queue!.songs.addSong(song);
 
         try {

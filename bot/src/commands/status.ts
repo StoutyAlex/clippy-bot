@@ -13,7 +13,7 @@ class Status extends Command {
         super(client, meta);
     };
 
-    async run(message: Message, ...args: string[]): Promise<any> {
+    async run(message: Message, args: string[]): Promise<any> {
         const embed: MessageEmbed = new MessageEmbed()
             .setTitle('Sheev Bot Status')
             .setColor('GREEN')
