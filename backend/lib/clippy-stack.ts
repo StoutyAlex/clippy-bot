@@ -48,6 +48,7 @@ export class ClippyStack extends cdk.Stack {
     const getMedia = new ClippyLambda(this, 'ClippyGetMedia', { name: 'get-media', environment })
     const getMediaItem = new ClippyLambda(this, 'ClippyGetMediaItem', { name: 'get-media-item', environment })
     const guildHandler = new ClippyLambda(this, 'ClippyGuildHandler', { name: 'guild-handler', environment })
+    const messageHandler = new ClippyLambda(this, 'ClippyMessageHandler', { name: 'message-handler', environment })
 
     new events.Rule(this, buildName('GuildEvents-rule', props.stage), {
       enabled: true,
@@ -58,6 +59,18 @@ export class ClippyStack extends cdk.Stack {
       },
       targets: [
         new LambdaFunctionTarget(deleteMedia)
+      ]
+    });
+
+    new events.Rule(this, buildName('MessageEvents-rule', props.stage), {
+      enabled: true,
+      eventBus: bus,
+      eventPattern: {
+        source: ['DiscordBot'],
+        detailType: ['MessageReceived']
+      },
+      targets: [
+        new LambdaFunctionTarget(messageHandler)
       ]
     });
 

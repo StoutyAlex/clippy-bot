@@ -5,7 +5,8 @@ import { commandHandler } from "../commands";
 import { EventName } from "../types";
 
 import { EventBridge } from 'aws-sdk';
-import { PutEventsRequestEntry } from "aws-sdk/clients/eventbridge";
+
+import { MessageEvent as ClippyMessageEvent } from 'clippy-common';
 
 const EVENT_BUS_NAME = process.env.EVENT_BUS_NAME!
 
@@ -25,14 +26,14 @@ class MessageEvent extends Event implements MessageHandler {
 
         const eb = new EventBridge();
 
-        const entry: PutEventsRequestEntry = {
-            EventBusName: 'heo',
-            Source: 'discord-bot',
+        const entry: ClippyMessageEvent = {
+            EventBusName: EVENT_BUS_NAME,
+            Source: 'DiscordBot',
             DetailType: 'MessageReceived',
-            Detail: JSON.stringify({ });
+            Detail: JSON.stringify({ message })
         }
 
-        eb.putEvents({ Entries: [entry] }).promise();
+        const result = await eb.putEvents({ Entries: [entry] }).promise();
 
         if (message.content.toLowerCase().startsWith(this.client.config.prefix))
             commandHandler(this.client, message);
