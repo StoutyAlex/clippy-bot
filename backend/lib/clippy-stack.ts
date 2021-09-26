@@ -33,10 +33,18 @@ export class ClippyStack extends cdk.Stack {
       tableName: buildName('guild-table', props.stage),
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     })
+
+    const messageTable = new dynamodb.Table(this, 'ClippyMessageTable', {
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      tableName: buildName('message-table', props.stage),
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    })
     
-    const bus = new events.EventBus(this, buildName('EventBus', props.stage), { eventBusName: buildName('EventBus', props.stage) })
+    const bus = new events.EventBus(this, buildName('EventBus', props.stage), { eventBusName: buildName('event-bus', props.stage) })
 
     const environment = {
+      MESSAGE_TABLE_NAME: messageTable.tableName,
       MEDIA_TABLE_NAME: mediaTable.tableName,
       GUILD_TABLE_NAME: guildTable.tableName,
       EVENT_BUS_NAME: bus.eventBusName,
@@ -80,6 +88,7 @@ export class ClippyStack extends cdk.Stack {
     mediaTable.grantReadWriteData(addMedia)
     mediaTable.grantReadWriteData(updateMedia)
     guildTable.grantReadWriteData(guildHandler)
+    messageTable.grantReadWriteData(messageHandler)
     bus.grantPutEventsTo(guildHandler)
 
     const api = getApiGateway(this, props);
