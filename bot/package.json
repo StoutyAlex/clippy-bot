@@ -47,6 +47,7 @@
     "winston": "^3.3.3",
     "ytdl-core": "^4.9.1",
     "ytpl": "^2.2.3",
-    "ytsr": "^3.5.3"
+    "ytsr": "^3.5.3",
+    "clippy-common": "file:../clippy-common"
   }
 }
