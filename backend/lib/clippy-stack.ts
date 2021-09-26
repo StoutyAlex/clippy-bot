@@ -34,7 +34,7 @@ export class ClippyStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     })
     
-    const bus = new events.EventBus(this, buildName('ClippyEventBus', props.stage))
+    const bus = new events.EventBus(this, buildName('EventBus', props.stage), { eventBusName: buildName('EventBus', props.stage) })
 
     const environment = {
       MEDIA_TABLE_NAME: mediaTable.tableName,

@@ -17,6 +17,9 @@ class ClippyLambda extends NodejsFunction {
             functionName: props.name,
             entry: path.join(__dirname, '..', 'src', 'lambdas', `${props.fileName || props.name}.ts`),
             runtime: Runtime.NODEJS_14_X,
+            bundling: {
+                forceDockerBundling: false
+            },
             environment: {
                 ...props.environment,
             }
